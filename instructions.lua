@@ -102,3 +102,86 @@ data.instructions.disconnect_channel =
 	category = "Unit",
 	icon = "Main/skin/Icons/Common/56x56/Carry.png",
 }
+
+
+------------- Register Links
+
+
+-- Iterate over register links
+data.instructions.for_register_links =
+{
+	func = function(comp, state, cause,  from_reg, to_reg, exec_done)
+		local owner = comp.owner
+		local links = owner:GetRegisterLinks()
+		print(links)
+		local it = { 2 }
+		for i, row in ipairs(links) do
+			table.insert(it, row)
+		end
+		return BeginBlock(comp, state, it)
+	end,
+
+	next = function(comp, state, it, from_reg, to_reg, exec_done)
+		local i = it[1]
+		if i > #it then return true end
+		Set(comp, state, from_reg, { num = it[i].source_index })
+		Set(comp, state, to_reg, {num = it[i].index} )
+		it[1] = i + 1
+	end,
+
+	last = function(comp, state, it, from_reg, to_reg, exec_done)
+		Set(comp, state, from_reg, nil)
+		Set(comp, state, to_reg, nil)
+		state.counter = exec_done
+	end,
+
+	args = {
+		{ "out", "From", "Link Source" },
+		{ "out", "To", "Link Destination",  },
+		{ "exec", "Done", "Finished looping through all entities with signal" },
+	},
+	name = "Loop Register Links",
+	desc = "Loops through Register Links",
+	category = "Register Links",
+	icon = "Main/skin/Icons/Special/Commands/Make Order.png",
+}
+
+-- Set a specific Link
+data.instructions.set_register_link =
+{
+	func = function(comp, state, cause, from_reg, to_reg)
+		local owner = comp.owner
+		owner:LinkRegisterFromRegister(
+			GetNum(comp, state, from_reg),
+			GetNum(comp, state, to_reg)
+		)
+	end,
+	args = {
+		{ "in",   "From", "Link Source", "num" },
+		{ "in",   "To", "Link Destination", "num" },
+	},
+	name = "Link Register",
+	desc = "Links two registers together",
+	category = "Register Links",
+	icon = "Main/skin/Icons/Common/56x56/Carry.png",
+}
+
+-- Delete a specific Link
+data.instructions.unset_register_link =
+{
+	func = function(comp, state, cause, from_reg, to_reg)
+		local owner = comp.owner
+		owner:UnlinkRegisterFromRegister(
+			GetNum(comp, state, from_reg),
+			GetNum(comp, state, to_reg)
+		)
+	end,
+	args = {
+		{ "in",   "From", "Link Source", "num" },
+		{ "in",   "To", "Link Destination", "num" },
+	},
+	name = "Unlink Register",
+	desc = "Unlinks two registers",
+	category = "Register Links",
+	icon = "Main/skin/Icons/Common/56x56/Carry.png",
+}
